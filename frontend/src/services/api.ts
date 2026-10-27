@@ -18,7 +18,13 @@ type ApiRequestOptions=RequestInit&{timeoutMs?:number};
 // longer so a slow backend response is preferred over a premature abort, but it
 // still never waits forever.
 const AI_REQUEST_TIMEOUT_MS=60000;
+// In production (GitHub Pages), the frontend is served from a different origin
+// than the backend. VITE_API_BASE_URL must be set to the backend's public HTTPS
+// URL (e.g. https://your-backend.onrender.com). In local development it is left
+// empty so relative API paths go through the Vite dev proxy to the backend.
+const API_BASE_URL=import.meta.env.VITE_API_BASE_URL||'';
 const request=async<T>(url:string,init?:ApiRequestOptions):Promise<T>=>{
+  const fullUrl=API_BASE_URL?`${API_BASE_URL}${url}`:url;
  const {timeoutMs,...rest}=init||{};
  const controller=new AbortController();
  const external=rest.signal;
@@ -26,7 +32,7 @@ const request=async<T>(url:string,init?:ApiRequestOptions):Promise<T>=>{
  const timer=timeoutMs?window.setTimeout(()=>controller.abort(),timeoutMs):undefined;
  let r:Response;
  try{
-  r=await fetch(url,{...rest,signal:controller.signal});
+  r=await fetch(fullUrl,{...rest,signal:controller.signal});
  }catch(error){
   const aborted=(error as Error|undefined)?.name==='AbortError'||controller.signal.aborted;
   const err=new Error(aborted

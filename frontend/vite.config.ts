@@ -4,7 +4,9 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const apiBase = env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+  const isProduction = mode === 'production';
   return {
+    base: isProduction ? '/trade-assit/' : '/',
     plugins: [react()],
     server: {
       host: '127.0.0.1',
